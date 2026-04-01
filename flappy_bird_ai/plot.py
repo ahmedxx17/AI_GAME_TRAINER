@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_training(scores):
+def plot_training(scores: list[int]) -> None:
     """
     Generate and display training progress graphs.
 

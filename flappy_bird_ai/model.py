@@ -1,16 +1,9 @@
-"""
-model.py - Deep Q-Network (DQN) neural network architecture.
-
-This module defines the neural network that the AI agent uses to estimate
-Q-values for each possible action. The network takes a 4-dimensional state
-vector as input and outputs 2 Q-values (one for each action: do nothing or flap).
-
-The Q-value represents the expected total future reward for taking an action
-in a given state. Higher Q-value = better action according to the network.
-"""
+"""model.py - Deep Q-Network (DQN) neural network architecture."""
 
 import torch
 import torch.nn as nn
+
+from config import ACTION_SIZE, HIDDEN_SIZE, STATE_SIZE
 
 
 class DQN(nn.Module):
@@ -18,42 +11,46 @@ class DQN(nn.Module):
     Deep Q-Network with two hidden layers.
 
     Architecture:
-        Input (4) -> Linear(64) -> ReLU -> Linear(64) -> ReLU -> Linear(2) -> Output
+        Input (STATE_SIZE) -> Linear(HIDDEN_SIZE) -> ReLU ->
+        Linear(HIDDEN_SIZE) -> ReLU -> Linear(ACTION_SIZE) -> Output
 
     The output layer has NO activation function (no softmax or sigmoid)
     because Q-values can be any real number — they represent expected
     cumulative rewards, which are not bounded to [0, 1].
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        state_size: int = STATE_SIZE,
+        action_size: int = ACTION_SIZE,
+        hidden_size: int = HIDDEN_SIZE,
+    ) -> None:
         """
         Initialize the DQN with a sequential network.
 
         Layer breakdown:
-            - Layer 1: 4 inputs (state features) -> 64 neurons
-            - Layer 2: 64 neurons -> 64 neurons (deeper feature extraction)
-            - Layer 3: 64 neurons -> 2 outputs (Q-value per action)
+            - Layer 1: state_size inputs -> hidden_size neurons
+            - Layer 2: hidden_size neurons -> hidden_size neurons
+            - Layer 3: hidden_size neurons -> action_size outputs
         """
         super(DQN, self).__init__()
 
         self.network = nn.Sequential(
-            nn.Linear(4, 64),      # Input layer: 4 state values -> 64 hidden units
+            nn.Linear(state_size, hidden_size),      # Input layer: state -> hidden units
             nn.ReLU(),             # Activation: introduces non-linearity
-            nn.Linear(64, 64),     # Hidden layer: deeper pattern recognition
+            nn.Linear(hidden_size, hidden_size),     # Hidden layer: deeper pattern recognition
             nn.ReLU(),             # Activation
-            nn.Linear(64, 2)       # Output layer: Q-value for each of 2 actions
+            nn.Linear(hidden_size, action_size)      # Output layer: Q-value per action
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass through the network.
 
         Parameters:
-            x (torch.Tensor): Input state tensor of shape (batch_size, 4).
+            x (torch.Tensor): Input state tensor of shape (batch_size, state_size).
 
         Returns:
-            torch.Tensor: Q-values of shape (batch_size, 2).
-                          Index 0 = Q-value for 'do nothing'
-                          Index 1 = Q-value for 'flap'
+            torch.Tensor: Q-values of shape (batch_size, action_size).
         """
         return self.network(x)      # Raw Q-values, no activation on output

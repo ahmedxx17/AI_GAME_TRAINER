@@ -11,6 +11,8 @@ shifts to exploiting its learned knowledge (low epsilon).
 """
 
 import random
+from typing import Optional
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -20,7 +22,7 @@ from memory import ReplayMemory
 from config import (
     BATCH_SIZE, LEARNING_RATE, GAMMA,
     EPSILON_START, EPSILON_MIN, EPSILON_DECAY,
-    MEMORY_CAPACITY
+    MEMORY_CAPACITY, TARGET_UPDATE_FREQ
 )
 
 
@@ -34,7 +36,7 @@ class DQNAgent:
         - The Bellman equation to compute target Q-values for learning
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the DQN agent with network, memory, optimizer, and exploration settings.
         """
@@ -44,6 +46,11 @@ class DQNAgent:
 
         # ── Neural network: estimates Q-values for each action ──────────
         self.model = DQN().to(self.device)
+        self.target_model = DQN().to(self.device)
+        self.target_model.load_state_dict(self.model.state_dict())
+        self.target_model.eval()
+        self.train_step_count = 0
+        self.target_update_freq = TARGET_UPDATE_FREQ
 
         # ── Replay memory: stores past experiences for training ─────────
         self.memory = ReplayMemory(capacity=MEMORY_CAPACITY)
@@ -51,13 +58,13 @@ class DQNAgent:
         # ── Optimizer: Adam is widely used for its adaptive learning rate ──
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=LEARNING_RATE)
 
-        # ── Loss function: MSE between predicted Q and target Q ─────────
-        self.criterion = nn.MSELoss()
+        # ── Loss function: Huber loss for better stability ──────────────
+        self.criterion = nn.SmoothL1Loss()
 
         # ── Exploration rate: starts high (explore) and decays (exploit) ─
         self.epsilon = EPSILON_START
 
-    def choose_action(self, state):
+    def choose_action(self, state: np.ndarray) -> int:
         """
         Select an action using epsilon-greedy policy.
 
@@ -69,7 +76,7 @@ class DQNAgent:
         to discover what works.
 
         Parameters:
-            state (numpy.ndarray): Current state vector of shape (4,).
+            state (numpy.ndarray): Current state vector of shape (STATE_SIZE,).
 
         Returns:
             int: Action to take (0 = do nothing, 1 = flap).
@@ -90,7 +97,7 @@ class DQNAgent:
         # argmax returns the index of the highest Q-value (best action)
         return q_values.argmax().item()
 
-    def train(self):
+    def train(self) -> Optional[float]:
         """
         Perform one training step using a batch sampled from replay memory.
 
@@ -108,7 +115,7 @@ class DQNAgent:
         """
         # Don't train until we have enough experiences for a full batch
         if len(self.memory) < BATCH_SIZE:
-            return
+            return None
 
         # ── Sample a random batch from replay memory ────────────────
         batch = self.memory.sample(BATCH_SIZE)
@@ -135,20 +142,27 @@ class DQNAgent:
         # not part of the computation graph (we don't backprop through targets)
         with torch.no_grad():
             # max(1)[0] gets the maximum Q-value across actions for each next_state
-            max_next_q = self.model(next_states).max(1)[0]
+            max_next_q = self.target_model(next_states).max(1)[0]
 
             # Bellman equation: target = reward + gamma * max_next_q * (1 - done)
             # (1 - done) zeroes out future value when the episode ended
             target_q = rewards + (1 - dones) * GAMMA * max_next_q
 
         # ── Compute loss and update the network ─────────────────────
-        loss = self.criterion(current_q, target_q)  # MSE between predicted and target
+        loss = self.criterion(current_q, target_q)  # Huber loss between predicted and target
 
         self.optimizer.zero_grad()  # Clear old gradients (PyTorch accumulates by default)
         loss.backward()             # Compute gradients via backpropagation
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
         self.optimizer.step()       # Update network weights using Adam optimizer
 
-    def decay_epsilon(self):
+        self.train_step_count += 1
+        if self.train_step_count % self.target_update_freq == 0:
+            self.target_model.load_state_dict(self.model.state_dict())
+
+        return loss.item()
+
+    def decay_epsilon(self) -> None:
         """
         Reduce the exploration rate after each episode.
 

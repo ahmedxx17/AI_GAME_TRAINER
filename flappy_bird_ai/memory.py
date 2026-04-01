@@ -18,6 +18,12 @@ Why replay memory is important:
 
 import random
 from collections import deque
+from typing import Deque, List, Tuple
+
+import numpy as np
+
+
+Experience = Tuple[np.ndarray, int, float, np.ndarray, float]
 
 
 class ReplayMemory:
@@ -28,7 +34,7 @@ class ReplayMemory:
     to make room for the newest one (FIFO behavior via deque).
     """
 
-    def __init__(self, capacity=10000):
+    def __init__(self, capacity: int = 10000) -> None:
         """
         Initialize the replay memory.
 
@@ -37,9 +43,16 @@ class ReplayMemory:
                            Default is 10000, matching config.MEMORY_CAPACITY.
         """
         # deque with maxlen automatically drops oldest items when full
-        self.memory = deque(maxlen=capacity)
+        self.memory: Deque[Experience] = deque(maxlen=capacity)
 
-    def push(self, state, action, reward, next_state, done):
+    def push(
+        self,
+        state: np.ndarray,
+        action: int,
+        reward: float,
+        next_state: np.ndarray,
+        done: float,
+    ) -> None:
         """
         Store a single experience in the replay buffer.
 
@@ -52,7 +65,7 @@ class ReplayMemory:
         """
         self.memory.append((state, action, reward, next_state, done))
 
-    def sample(self, batch_size):
+    def sample(self, batch_size: int) -> List[Experience]:
         """
         Randomly sample a batch of experiences from the buffer.
 
@@ -67,7 +80,7 @@ class ReplayMemory:
         """
         return random.sample(self.memory, batch_size)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """
         Return the current number of experiences stored.
 
