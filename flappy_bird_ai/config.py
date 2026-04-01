@@ -6,7 +6,7 @@ so they can be easily tuned without modifying any other file.
 """
 
 # ─── Training Hyperparameters ───────────────────────────────────────
-NUM_EPISODES    = 2000      # Total number of training episodes
+NUM_EPISODES    = 2000     # Total number of training episodes
 MAX_STEPS       = 10000     # Max frames per episode (safety cap to prevent infinite loops)
 BATCH_SIZE      = 32        # Number of experiences sampled from memory per training step
 LEARNING_RATE   = 0.001     # Adam optimizer learning rate
@@ -16,7 +16,7 @@ TARGET_UPDATE_FREQ = 1000   # How often to sync target network with policy netwo
 # ─── Exploration Hyperparameters ────────────────────────────────────
 EPSILON_START   = 1.0       # Initial exploration rate (100% random actions)
 EPSILON_MIN     = 0.01      # Minimum exploration rate (1% random actions)
-EPSILON_DECAY   = 0.995     # Multiplicative decay applied after each episode
+EPSILON_DECAY   = 0.965    # Multiplicative decay applied after each episode
 
 # ─── Replay Memory ─────────────────────────────────────────────────
 MEMORY_CAPACITY = 10000     # Maximum number of experiences stored in replay buffer
