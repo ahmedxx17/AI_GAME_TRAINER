@@ -16,7 +16,7 @@ TARGET_UPDATE_FREQ = 1000   # How often to sync target network with policy netwo
 # ─── Exploration Hyperparameters ────────────────────────────────────
 EPSILON_START   = 1.0       # Initial exploration rate (100% random actions)
 EPSILON_MIN     = 0.01      # Minimum exploration rate (1% random actions)
-EPSILON_DECAY   = 0.955    # Multiplicative decay applied after each episode
+EPSILON_DECAY   = 0.995    # Multiplicative decay applied after each episode
 
 # ─── Replay Memory ─────────────────────────────────────────────────
 MEMORY_CAPACITY = 10000     # Maximum number of experiences stored in replay buffer
