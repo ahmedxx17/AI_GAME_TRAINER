@@ -98,7 +98,7 @@ class FlappyBirdEnv:
     FLAP_STR    = -6
     PIPE_SPEED  = 3
     PIPE_GAP    = 180
-    PIPE_WIDTH  = 80          # matches reference (PIPE_WIDHT = 80)
+    PIPE_WIDTH  = 60
     BIRD_X      = 50
     BIRD_RADIUS = 15
     GAP_MARGIN  = 20
