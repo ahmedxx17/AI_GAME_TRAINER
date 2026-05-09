@@ -94,6 +94,9 @@ def main() -> None:
         "--play", action="store_true", help="Load a trained model and watch the AI play"
     )
     parser.add_argument(
+        "--vs", action="store_true", help="Race against the fully trained AI in split-screen mode"
+    )
+    parser.add_argument(
         "--resume",
         action="store_true",
         help="Resume training from an existing model.pth",
@@ -107,13 +110,19 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if not args.train and not args.play:
+    if not args.train and not args.play and not args.vs:
         parser.print_help()
         print("\nExample usage:")
         print("  python main.py --train             # Train the AI")
         print("  python main.py --train --render    # Train with visuals")
         print("  python main.py --train --resume    # Continue from model.pth")
         print("  python main.py --play              # Watch trained AI play")
+        print("  python main.py --vs                # Race against the AI")
+        sys.exit(0)
+
+    if args.vs:
+        import human_vs_ai
+        human_vs_ai.run_vs_mode()
         sys.exit(0)
 
     if args.train:

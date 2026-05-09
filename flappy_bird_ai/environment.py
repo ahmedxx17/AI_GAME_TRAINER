@@ -36,7 +36,8 @@ class FlappyBirdEnv:
     BIRD_RADIUS = 15
     GAP_MARGIN = 20
 
-    def __init__(self) -> None:
+    def __init__(self, seed: int | None = None) -> None:
+        self.rng = random.Random(seed) if seed is not None else random.Random()
         self.bird_y = 0.0
         self.bird_vel = 0.0
         self.score = 0
@@ -114,7 +115,7 @@ class FlappyBirdEnv:
 
     def _random_gap_y(self) -> int:
         """Create a valid random gap center with top/bottom margin."""
-        return random.randint(
+        return self.rng.randint(
             self.PIPE_GAP // 2 + self.GAP_MARGIN,
             self.SCREEN_H - self.PIPE_GAP // 2 - self.GAP_MARGIN,
         )
