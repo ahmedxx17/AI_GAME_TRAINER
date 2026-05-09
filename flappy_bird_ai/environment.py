@@ -28,9 +28,9 @@ class FlappyBirdEnv:
     SCREEN_W = 400
     SCREEN_H = 600
     GRAVITY = 0.5
-    FLAP_STR = -8
+    FLAP_STR = -6
     PIPE_SPEED = 3
-    PIPE_GAP = 150
+    PIPE_GAP = 180
     PIPE_WIDTH = 60
     BIRD_X = 50
     BIRD_RADIUS = 15
@@ -89,6 +89,14 @@ class FlappyBirdEnv:
             reward = REWARD_PASS
         else:
             reward = REWARD_ALIVE
+
+        # Proximity bonus: reward bird for being vertically near gap center
+        # This gives the agent a learning signal before it can pass pipes
+        if not done:
+            nearest = self._nearest_pipe()
+            dist_to_gap = abs(self.bird_y - nearest["gap_y"]) / self.SCREEN_H
+            proximity_bonus = 0.3 * max(0.0, 1.0 - dist_to_gap * 3)
+            reward += proximity_bonus
 
         return self._get_state(), reward, done
 

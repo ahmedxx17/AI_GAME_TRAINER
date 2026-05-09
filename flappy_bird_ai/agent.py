@@ -82,8 +82,10 @@ class DQNAgent:
             int: Action to take (0 = do nothing, 1 = flap).
         """
         # ── Explore: random action ─────────────────────────────────
+        # Biased toward not flapping (90/10) because optimal play flaps rarely.
+        # Uniform 50/50 makes the bird fly off the top instantly during exploration.
         if random.random() < self.epsilon:
-            return random.randint(0, 1)
+            return 1 if random.random() < 0.1 else 0
 
         # ── Exploit: use the network to pick the best action ───────
         # Convert numpy state to PyTorch tensor
