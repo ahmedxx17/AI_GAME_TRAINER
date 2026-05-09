@@ -11,6 +11,16 @@ from environment import FlappyBirdEnv
 from agent import DQNAgent
 from config import FPS
 
+
+def get_device():
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        print(f"Using CUDA device: {torch.cuda.get_device_name(0)}")
+    else:
+        device = torch.device('cpu')
+        print("CUDA not available, using CPU")
+    return device
+
 SCREEN_W = FlappyBirdEnv.SCREEN_W
 SCREEN_H = FlappyBirdEnv.SCREEN_H
 
@@ -34,12 +44,20 @@ def run_vs_mode():
     env_human.reset()
     state_ai = env_ai.reset()
 
-    # Load the trained AI agent
+    device = get_device()
     agent = DQNAgent()
     if os.path.exists("model.pth"):
-        agent.model.load_state_dict(torch.load("model.pth", weights_only=True))
-        agent.epsilon = 0.0  # Zero exploration, play perfectly
-        print("Loaded fully trained AI from 'model.pth'!")
+        try:
+            agent.model.load_state_dict(torch.load("model.pth", weights_only=True, map_location=device))
+            agent.model.to(device)
+            agent.epsilon = 0.0
+            print("Loaded fully trained AI from 'model.pth'!")
+        except Exception as e:
+            print(f"Failed to load model with device {device}: {e}")
+            print("Falling back to CPU...")
+            agent.model.load_state_dict(torch.load("model.pth", weights_only=True, map_location=torch.device('cpu')))
+            agent.epsilon = 0.0
+            print("Loaded AI model on CPU fallback.")
     else:
         print("Warning: 'model.pth' not found. AI will just guess randomly.")
 
